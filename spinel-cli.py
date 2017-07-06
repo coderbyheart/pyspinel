@@ -785,6 +785,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
                     print("{} {} {}".format(hashmackaddr, pskd, timeout))
                     print(util.hexify_bytes(arr))
 
+                    self.prop_set_value(
+                        SPINEL.PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, 1)
                     self.prop_insert_value(SPINEL.PROP_THREAD_JOINERS,
                                            arr, str(len(arr)) + 's')
 
