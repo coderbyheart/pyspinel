@@ -354,7 +354,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         if line != None:
             if mixed_format == 'U':         # For UTF8, just a pass through line unmodified
                 value = line.encode('utf-8') + '\0'
-            elif mixed_format == 'D':     # Expect raw data to be hex string w/o delimeters
+            elif (mixed_format == 'D') or (mixed_format == 'E'):     # Expect raw data to be hex string w/o delimeters
                 value = util.hex_to_bytes(line)
             else:
                 # Most everything else is some type of integer
@@ -712,6 +712,20 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > commissioner stop
             Done
         \033[0m\033[1m
+        commissioner joiner add <hashmacaddr> <psdk> <timeout>
+        \033[0m
+            Add a Joiner entry.
+        \033[2m
+            > commissioner joiner add d45e64fa83f81cf7 PSK 10
+            Done
+        \033[0m\033[1m
+        commissioner joiner remove <hashmacaddr>
+        \033[0m
+            Remove a Joiner entry.
+        \033[2m
+            > commissioner joiner remove d45e64fa83f81cf7
+            Done
+        \033[0m\033[1m
         commissioner panid <panid> <mask> <destination>
         \033[0m
             Perform panid query.
@@ -729,7 +743,59 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         \033[0m
         """
-        pass
+        params = line.split(" ")
+        if len(params) > 0:
+            sub_command = params[0]
+        else:
+            sub_command = ""
+
+        if sub_command == "start":
+            self.prop_set_value(SPINEL.PROP_THREAD_COMMISSIONER_ENABLED, 1)            
+            print("Done")
+            return
+
+        elif sub_command == "stop":
+            self.prop_set_value(SPINEL.PROP_THREAD_COMMISSIONER_ENABLED, 0)
+            print("Done")
+            return
+
+        elif sub_command == "joiner":
+            if len(params) > 1:
+                subsub_command = params[1]
+            else:
+                subsub_command = ""
+
+            if subsub_command == "add":
+                arr = ""                
+                if len(params) > 4:
+                    hashmackaddr = params[2]
+                    pskd = params[3]
+                    timeout = params[4]
+
+                    if (hashmackaddr != "*"):
+                        arr += self.wpan_api.encode_fields('ULE',
+                                                            self.prep_line(pskd, 'U'),
+                                                            int(timeout),
+                                                            hashmackaddr)
+                    else:
+                        arr += self.wpan_api.encode_fields('UL',
+                                                            pskd,
+                                                            int(timeout))
+                        
+                    print("{} {} {}".format(hashmackaddr, pskd, timeout))
+                    print(util.hexify_bytes(arr))
+
+                    self.prop_insert_value(SPINEL.PROP_THREAD_JOINERS,
+                                           arr, str(len(arr)) + 's')
+
+                    print("Done")
+                    return
+            elif subsub_command == "remove":
+                pass
+            else:
+                self.prop_get_value(SPINEL.PROP_THREAD_JOINERS)
+
+        print("Error")
 
     def do_contextreusedelay(self, line):
         """
