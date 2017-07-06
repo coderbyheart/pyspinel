@@ -40,6 +40,7 @@ from spinel.pcap import PcapCodec
 # This is maximum that works for MacOS.
 DEFAULT_NODEID = 34    # same as WELLKNOWN_NODE_ID
 DEFAULT_CHANNEL = 11
+DEFAULT_PANID = 0xFFFF
 
 def parse_args():
     """ Parse command line arguments for this applications. """
@@ -64,6 +65,7 @@ def parse_args():
 
     opt_parser.add_option("-c", "--channel", action="store",
                           dest="channel", type="int", default=DEFAULT_CHANNEL)
+    opt_parser.add_option("-i", "--panid", action="store", dest="panid", type="int", default=DEFAULT_PANID)
 
     opt_parser.add_option('--ti-crc', action='store_true',
                           dest='ti_crc', default=False )
@@ -79,7 +81,7 @@ def sniffer_init(wpan_api, options):
     wpan_api.prop_set_value(SPINEL.PROP_PHY_ENABLED, 1)
     wpan_api.prop_set_value(SPINEL.PROP_MAC_FILTER_MODE, SPINEL.MAC_FILTER_MODE_MONITOR)
     wpan_api.prop_set_value(SPINEL.PROP_PHY_CHAN, options.channel)
-    wpan_api.prop_set_value(SPINEL.PROP_MAC_15_4_PANID, 0xFFFF, 'H')
+    wpan_api.prop_set_value(SPINEL.PROP_MAC_15_4_PANID, options.panid, 'H')
     wpan_api.prop_set_value(SPINEL.PROP_MAC_RAW_STREAM_ENABLED, 1)
     wpan_api.prop_set_value(SPINEL.PROP_NET_IF_UP, 1)
 
